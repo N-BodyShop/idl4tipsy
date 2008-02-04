@@ -1,3 +1,4 @@
+;write a tipsy format ascii file 
 pro wtipsy_asc,outfile,h,g,d,s
 
 ndark=h.n-h.nstar-h.ngas
