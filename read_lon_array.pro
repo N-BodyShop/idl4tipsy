@@ -3,7 +3,8 @@ FUNCTION read_lon_array,filename
 
   openr,lun,filename,/get_lun
   readf,lun,arrsize
-  array = lonarr(arrsize)
+  readcol,filename,arrsize,format='L',numline=1
+  array = intarr(arrsize)
   readf,lun,array
   close,lun
   free_lun,lun
