@@ -52,6 +52,6 @@ cats = replicate(record,n)
 readu,lun,cats
   
 close,lun
-return,cats[sort(cats.iorderstar)]
+return,cats[uniq(cats.iorderstar,sort(cats.iorderstar))]
 
 end
