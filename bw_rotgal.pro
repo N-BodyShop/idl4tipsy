@@ -1,10 +1,3 @@
-;bw_rotgal,infile='/astro/net/scratch2/fabio/Xruns/h1201-h1755-X2X2g1bwK/h1201-h1755-X2X2g1bwK.00512',multiple='Data_files/clean_halosX2X2.dat'
-;bw_rotgal,infile='/astro/net/scratch2/fabio/Xruns/h1201-h1755-X3X3g1bwK/h1201-h1755-X3X3g1bwK.00512',multiple='Data_files/clean_halosX3X3.dat'
-;bw_rotgal,infile='/astro/net/scratch2/fabio/Xruns/h1201-h1755-X5X5g1bwK/h1201-h1755-X5X5g1bwK.00512',multiple='Data_files/clean_halosX5X5.dat'
-;bw_rotgal,infile='/astro/net/scratch2/fabio/Xruns/h1201-h1755-X5X5g1bwK/h1201-h1755-X5X5g1bwK.00084',multiple='Data_files/clean_halosX5X5_z3.dat'
-;bw_rotgal,infile='/astro/net/scratch2/fabio/Xruns/h1201-h1755-X2X2g3bwK/h1201-h1755-X2X2g3bwK.00512',multiple='Data_files/clean_halosX2X2_nf.dat'
-;Use gen_clean_halos.pl to make clean_halos.dat
-
 pro bw_rotgal, INFILE = infile, RBOX = rbox, OUTBOX = outbox, $
                ANGLE = angle, LUNIT = lunit, TYPE = type, HALOID = haloid, $
                MULTIPLE = multiplefile
