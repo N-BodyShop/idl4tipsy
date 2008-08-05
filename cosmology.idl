@@ -1,0 +1,241 @@
+;******************************************************************************
+;All the basic cosmology you could desire!
+; 
+;Note:  Throughout, we assume a Hubble constant of 70.0 km/s/Mpc, 
+;       an omega_matter of 0.3, and an omega_vacuum of 0.7.
+;
+;Written by Vandana Desai on July 5, 2001.
+;Edited by Beth Willman on Dec 01 2003 to add "function get_Mfilt, a"
+;******************************************************************************
+
+function dMfunc, x
+
+;THIS FUNCTION DEFINES THE INTEGRAND IN THE INTEGRAL THAT HAS TO BE COMPUTED
+;IN ORDER TO COMPUTE MOST INTERESTING COSMOLOGICAL PARAMETERS.  SEE
+;'THE COSMOLOGICAL CONSTANT' BY SEAN CARROLL, EQUATION 42 FOR THE PROPER
+;MOTION DISTANCE.
+
+omega_m = 0.3
+omega_v = 0.7
+H = 70.0 * 1000.0 * 100.0 / ((10.0^6.0) * (3.0 * 10.0^18.0)) ;in sec^-1
+
+H_a = H * (omega_m / x^3 + omega_v)^0.5
+
+return, 1.0 / (x^2.0 * H_a)
+
+end
+
+;******************************************************************************
+
+function lbfunc, x
+
+;THIS FUNCTION DEFINES THE INTEGRAND IN THE INTEGRAL THAT HAS TO BE COMPUTED
+;IN ORDER TO COMPUTE THE LOOKBACK TIME.  SEE 'THE COSMOLOGICAL CONSTANT' BY
+;SEAN CARROLL, EQUATION 36.
+
+omega_m = 0.3
+omega_v = 0.7
+H = 70.0 * 1.02528 * 10.0^(-12.0) ;in years^-1
+return, ((omega_m/x + omega_v * x * x)^(-0.5))/H
+
+end
+
+;******************************************************************************
+
+function lookback_vd, z
+
+;COMPUTES THE LOOKBACK TIME IN YEARS TO AN OBJECT AT REDSHIFT Z
+
+return, qsimp('lbfunc', 1.0/(1.0 + z), 1.0)
+
+end
+
+;******************************************************************************
+
+function d_M, z
+
+;COMPUTES THE PROPER MOTION DISTANCE IN PARSECS TO AN OBJECT AT REDSHIFT Z
+
+return, (3.0 * 10.0^10.0 * qsimp('dMfunc', 1.0/(1.0+z), 1.0)) / (3.0 * 10.0^18.0)
+
+end
+
+;******************************************************************************
+
+function d_A, z
+
+;COMPUTES THE ANGULAR DIAMETER DISTANCE IN PARSECS TO AN OBJECT AT REDSHIFT Z
+
+return, d_M(z) / (1.0 + z)
+
+end
+
+;******************************************************************************
+
+function d_L, z
+
+;COMPUTES THE LUMINOSITY DISTANCE IN PARSECS TO AN OBJECT AT REDSHIFT Z
+
+return, d_M(z) * (1.0 + z)
+
+end
+
+;******************************************************************************
+
+function absolute_magnitude, m, z
+
+;COMPUTES THE ABSOLUTE MAGNITUDE, GIVEN AN APPARENT MAGNITUDE AND A REDSHIFT
+
+return, m - 5.0 * alog10(d_L(z)) + 5.0
+
+end
+
+;******************************************************************************
+
+function apparent_magnitude, M, z
+
+;COMPUTE THE APPARENT MAGNITUDE, GIVEN AN ABSOLUTE MAGNITUDE AND A
+;REDSHIFT
+
+return, M + 5.0 * alog10(d_L(z)) - 5.0
+
+end
+
+;******************************************************************************
+
+function proper_size, arcsecs, z
+
+;COMPUTES THE PROPER SIZE OF AN OBJECT IN PARSECS, GIVEN ITS ANGULAR EXTENT
+;IN ARCSECONDS, AND ITS REDSHIFT
+
+return, d_A(z) * arcsecs * 3.14159628 / (60.0 * 60.0 * 180.0)
+
+end
+
+;******************************************************************************
+
+function angular_size, proper_size, z
+
+;COMPUTES THE ANGULAR SIZE OF AN OBJECT IN ARSECONDS, GIVEN ITS PROPER
+;SIZE IN PARSECS, AND ITS REDSHIFT
+
+return, proper_size * 60.0 * 60.0 * 180.0 / (d_A(z) * 3.14159628)
+
+end
+
+;******************************************************************************
+
+function sound_speed, a
+
+; this function for sounds speed uses 
+; the thermal history for a simple reionization at z = 7
+; as given in gnedin et al 2003
+;
+
+mu = 0.59 ;mean molecular weight of ionized gas
+mp = 1.672*10.^(-27) ;kg
+kb = 1.38*10.^(-23) ;m^2 kg s^-2 K^(-1) in mks
+omega_b = 0.03
+
+beta = 1.
+z_rei = 7.
+z_beg = 15.
+Tcmb = 2.7
+T4_rei = 2.5 ;the temperature at z_rei, in units of 10^4
+h = .7
+;T_beg =  Tcmb*(1+z_beg)/(132.*(omega_b*h^2./0.02)^0.4)
+T_beg =  Tcmb*(1+z_beg)
+
+z = 1./a - 1.
+;if z ge z_beg then T = Tcmb*(1+z)/(132.*(omega_b*h^2./0.02)^0.4)
+if z ge z_beg then T = Tcmb*(1+z)
+if z lt z_beg and z gt z_rei then T = (1d4*T4_rei - T_beg)*( (z-z_beg)/(z_rei-z_beg)) + T_beg
+if z le z_rei then T = 1d4*T4_rei * ((1 + z)/(1 + z_rei))^beta
+
+
+return, (kb * T * 5./(3.*mu*mp))^0.5
+
+end
+
+;******************************************************************************
+
+function rhobar, a
+
+omega_m = 0.3
+omega_v = 0.7
+h_nought = 70.
+G = 6.67*10.^(-11) ; in mks
+H = h_nought * 1000.0 * 100.0 / ((10.0^6.0) * (3.0 * 10.0^18.0)) ;in sec^-1
+
+rho_nought = omega_m * 3. * (H^2.)/(8.*!Pi*G)
+
+return, rho_nought/a^3.
+
+end
+
+;******************************************************************************
+
+function jeans_scale, a
+
+G = 6.67*10.^(-11) ; in mks
+
+return, (4.*!PI*G*rhobar(a))^0.5*a/sound_speed(a)
+
+end
+
+;******************************************************************************
+
+function jeans_mass, a
+
+; this is the integrand in the filtering mass formula
+
+return, 4.*!PI/3. * rhobar(a) * (2.*!PI*a/jeans_scale(a))^3.
+
+end
+
+;******************************************************************************
+
+function mfilt_func, a
+
+common constants, aref
+
+; this is the integrand in the filtering mass formula
+
+; print, a, aref, JEANS_MASS(a), JEANS_MASS(a)^(2./3.)
+
+result = (JEANS_MASS(a))^(2./3.) * (1. - (a/aref)^0.5)
+
+return, result
+
+end
+
+;********************************************************************
+function kf2_func, a
+
+common constants, aref
+
+return, JEANS_SCALE(a)^(-2.) * (1. - (a/aref)^0.5)
+
+end
+
+;********************************************************************
+function one_over_kf2
+
+common constants, aref
+
+zstart = 20.
+
+return, (3./aref)*QROMB('kf2_func', 1./(zstart), aref, /DOUBLE)
+
+end
+;********************************************************************
+
+function mfilt_from_kf
+
+common constants, aref
+
+return, (4.*!Pi/3.) * rhobar(aref) * (2.*!Pi*aref)^3. * (one_over_kf2())^(3./2.)
+
+end
+
+ ;*************************************;
