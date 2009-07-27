@@ -1,4 +1,4 @@
-; FUNCTION GETWIDTH
+; FUNCTION GET_WIDTH
 ;
 ; Returns the width of the HI line at some percentage of the peak.
 ;
@@ -17,7 +17,7 @@
 ;    W: The width at chosen percentage of the peak.
 ;
 ;
-function get_width, spectrum, vaxis, width, v1, v2, widthval
+function get_width, spectrum, vaxis, width, v1, v2, widthval, vnet=vnet, onepeak=onepeak
 
 if not (keyword_set(spectrum)) then begin
     print,'get_width(spectrum, [vaxis, width, v1, v2, widthval])'
@@ -41,6 +41,8 @@ if (width ge 1) then begin
     return,-1
 endif
 
+if not keyword_set(vnet) then vnet = 0.
+
 ; adjust velocities just in case.
 ;vave = total(vaxis * spectrum) / total(spectrum)
 ;vaxisp = vaxis - vave
@@ -51,7 +53,7 @@ widthval = peak * width
 i1 = where(vaxis lt 0)
 
 ; figure out first side
-blah = min(abs(spectrum[where(vaxis le 0)] - widthval), i1)
+blah = min(abs(spectrum[where(vaxis le vnet)] - widthval), i1)
 if ((spectrum[i1] gt widthval) and (i1 gt 0))then begin
     m = (spectrum[i1] - spectrum[i1-1]) / (vaxis[i1] - vaxis[i1-1])
     b = spectrum[i1] - m * vaxis[i1]
@@ -64,8 +66,8 @@ endif else if ((spectrum[i1] lt widthval) and $
 endif else v1 = vaxis[i1]
 
 ; figure out second side
-blah = min(abs(spectrum[where(vaxis gt 0)] - widthval), i2)
-i2 = i2 + n_elements(where(vaxis le 0))
+blah = min(abs(spectrum[where(vaxis gt vnet)] - widthval), i2)
+i2 = i2 + n_elements(where(vaxis le vnet))
 if ((spectrum[i2] gt widthval) and (i2 gt 0)) then begin
     m = (spectrum[i2] - spectrum[i2-1]) / (vaxis[i2] - vaxis[i2-1])
     b = spectrum[i2] - m * vaxis[i2]

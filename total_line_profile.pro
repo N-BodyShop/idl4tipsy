@@ -119,8 +119,11 @@ endif
 
 ; match peaks:
 if keyword_set(onepeak) then begin
-    blah = max(spectrum, i)
-    vnet = vaxis[i]
+;    blah = max(spectrum, i)
+;    vnet = vaxis[i]
+    vnet = total(spectrum * vaxis) / total(spectrum)
+    v1 = vnet - 100
+    v2 = vnet + 100
 endif else begin
     blah = max(spectrum[where(vaxis le 0)], i1)
     v1 = vaxis[i1]
@@ -132,7 +135,7 @@ endelse
 if keyword_set(shift) then vaxis = vaxis - vnet
 
 if keyword_set(width) then begin
-    w = get_width(spectrum, vaxis, width, v1w, v2w, widthval)
+    w = get_width(spectrum, vaxis, width, v1w, v2w, widthval, vnet=vnet, onepeak=onepeak)
 endif
 
 if keyword_set(outfile) or keyword_set(doplot) then begin
@@ -149,7 +152,7 @@ if keyword_set(outfile) or keyword_set(doplot) then begin
     xmin = 100.*round(v1/100.)-100
     xmax = 100.*round(v2/100.)+100
     xrang = [-1. * max(abs([xmin,xmax])), max(abs([xmin,xmax]))]
-    xrang=[-1000,1000]
+;    xrang=[-1000,1000]
     plot, vaxis, spectrum, xtitle='Velocity (km/s)', $
       ytitle='M' + textoidl('_{HI}') +' (M' + textoidl('_{sun}') + ')',$
       title=titl, $
