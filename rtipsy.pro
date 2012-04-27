@@ -40,21 +40,20 @@ if (header.ndim lt 1 or header.ndim gt 3) then begin
   header = swap_endian(header)
   if (keyword_set(verbose)) then print,"SWAP_ENDIAN"
 endif
-
-if (keyword_set(verbose)) then print,"Read time,n,ngas,ndark,nstar: ",header.time,header.n,header.ngas,header.ndark,header.nstar
+if (keyword_set(verbose)) then print,"Read time,n,ngas,nstar,ndark: ",header.time,header.n,header.ngas,header.ndark,header.nstar
 
 fs = fstat(1)
 ;;; Explicitly pad header if required 
-if (fs.size eq ulong64(32L+header.ngas*48L+ulong64(header.ndark)*36L+header.nstar*44L)) then begin
-  dummy = 1L
+if (fs.size eq 32LL+header.ngas*48LL+header.ndark*36LL+header.nstar*44LL) then begin
+  dummy = 1L 
   readu,1,dummy
-endif else if (fs.size ne 28L+header.ngas*48L+header.ndark*36L+header.nstar*44L) then begin  
+endif else if (fs.size ne 28LL+header.ngas*48LL+header.ndark*36LL+header.nstar*44LL) then begin  
   print, "RTIPSY ERROR: Header and file size inconsistent"
   print, "Estimates: Header bytes:  28 or 32 (either is OK)"
-  print, "     ngas: ",header.ngas," bytes:",48L*header.ngas
-  print, "    ndark: ",header.ndark," bytes:",36L*header.ndark
-  print, "    nstar: ",header.nstar," bytes:",44L*header.nstar
-  print, "Actual File bytes:",fs.size,"  not one of:",32L+header.ngas*48L+header.ndark*36L+header.nstar*44L,28L+header.ngas*48L+header.ndark*36L+header.nstar*44L
+  print, "     ngas: ",header.ngas," bytes:",48LL*header.ngas
+  print, "    ndark: ",header.ndark," bytes:",36LL*header.ndark
+  print, "    nstar: ",header.nstar," bytes:",44LL*header.nstar
+  print, "Actual File bytes:",fs.size,"  not one of:",32LL+header.ngas*48LL+header.ndark*36LL+header.nstar*44LL,28LL+header.ngas*48LL+header.ndark*36LL+header.nstar*44LL
   close,1
   return
 endif
