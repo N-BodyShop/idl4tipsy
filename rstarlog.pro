@@ -1,7 +1,7 @@
-function rstarlog,file,VERBOSE = verbose
+function rstarlog,file,VERBOSE = verbose,MOLECULARH = MOLECULARH,endianswap =endianswap
 ;;; RSTARLOG:  Tipsy starlog reader for IDL
 ;;; Author:  GS modified from original rtipsy by James Wadsley
-;;; 
+;;; Modified by Charlotte Christensen to read in files with molecular hydrogen 
 if (N_PARAMS() eq 0) then begin
   print, "rstarlog.pro  Reads tipsy starlog files: "
   print
@@ -28,8 +28,9 @@ openr,lun,file,/xdr,/get_lun
 
 ; starlog record structure
 ;record = {iOrderStar:0L, iOrderGas:0L, timeform:0.d, rform:dblarr(3), vform:dblarr(3), massForm:0.0d, rhoform:0.0d, Tempform:0.0d}
-record = {iOrderStar:0L, iOrderGas:0L, timeform:0.d, x:0.d,y:0.d,z:0.d,vx:0.d, $
-	vy:0.d, vz:0.d, massForm:0.0d, rhoform:0.0d, Tempform:0.0d}
+
+IF KEYWORD_SET(MOLECULARH) THEN record = {iOrderStar:0L, iOrderGas:0L, timeform:0.d, x:0.d,y:0.d,z:0.d,vx:0.d, vy:0.d, vz:0.d, massForm:0.0d, rhoform:0.0d, Tempform:0.0d, H2form:0.0d} $
+ELSE record = {iOrderStar:0L, iOrderGas:0L, timeform:0.d, x:0.d,y:0.d,z:0.d,vx:0.d, vy:0.d, vz:0.d, massForm:0.0d, rhoform:0.0d, Tempform:0.0d} 
 
 iSize = 0L
 readu,lun,iSize
@@ -50,6 +51,7 @@ if (keyword_set(verbose)) then print,"Reading in ",n," stars."
 
 cats = replicate(record,n)
 readu,lun,cats
+if (KEYWORD_SET(endianswap)) then cats=swap_endian(cats)
   
 close,lun
 return,cats[uniq(cats.iorderstar,sort(cats.iorderstar))]
