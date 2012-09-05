@@ -1,4 +1,4 @@
-pro shrinkspherecenter,minparticles=minparticles,shrinkfactor=shrinkfactor,doplot=doplot,verbose=verbose,dostop=dostop
+pro shrinkspherecenter_new,minparticles=minparticles,shrinkfactor=shrinkfactor,doplot=doplot,verbose=verbose,dostop=dostop
 
 ; for all halos in each file, find the center using shrinking spheres
 ; from power et al 2003?
@@ -49,31 +49,30 @@ for ii=0,nfiles-1 do begin
     for i=0,nhalos -1 do begin
         if keyword_set(verbose) then print,'*** HALO',uniquegrp[i],' *****'
         ; find particles in this halo
-        gasind = where(grp[0:h.ngas-1] eq uniquegrp[i],ngas)
-        if ngas ne 0 then gas = g[gasind]
-        darkind = where(grp[h.ngas:h.ngas+h.ndark-1] eq uniquegrp[i],ndark)
-        if ndark ne 0 then dark = d[darkind]
-        starind = where(grp[h.ngas+h.ndark:h.n-1] eq uniquegrp[i],nstar)
-        if nstar ne 0 then star = s[starind]
+	gind = where(grp[0:h.ngas-1] eq uniquegrp[i],ngas)			;section fixed by MJT to include possibility of no gas, no stars
+	dind = where(grp[h.ngas:h.ngas+h.ndark-1] eq uniquegrp[i],ndark)
+	sind = where(grp[h.ngas+h.ndark:h.n-1] eq uniquegrp[i],nstar)
+        if ngas gt 0 then gas = g[gind]
+	if ndark gt 0 then dark = d[dind]
+	if nstar gt 0 then star = s[sind]
         if ngas ne 0 AND ndark ne 0 AND nstar ne 0 then begin
             masses = double([gas.mass,dark.mass,star.mass])
             x = double([gas.x,dark.x,star.x])
             y = double([gas.y,dark.y,star.y])
             z = double([gas.z,dark.z,star.z])
-        endif ; some tiny halos may not have any gas.  but they may have DM and BH
+        endif ; some tiny halos may not have any gas.  but they must have DM and BH
         if ngas eq 0 AND ndark ne 0 AND nstar ne 0 then begin
             masses = [dark.mass,star.mass]
             x = [dark.x,star.x]
             y = [dark.y,star.y]
             z = [dark.z,star.z]
         endif 
-        if ngas ne 0 AND ndark ne 0 AND nstar eq 0 then begin
-            masses = [gas.mass,dark.mass]
-            x = [gas.x,dark.x]
-            y = [gas.y,dark.y]
-            z = [gas.z,dark.z]
-        endif 
-
+	if ngas eq 0 and nstar eq 0 and ndark ne 0 then begin
+	    masses = dark.mass
+	    x = dark.x
+	    y = dark.y
+	    z = dark.z
+	endif
         cx = total(masses*x)/total(masses)
         cy = total(masses*y)/total(masses)
         cz = total(masses*z)/total(masses)
@@ -97,61 +96,57 @@ for ii=0,nfiles-1 do begin
             ; reset radii, particle identities
             oldradius = radius
             newind = where(radius lt maxrad,npart)
-	    if npart eq 0 then continue ; exit loop and record info
             masses = masses[newind]
             radius = radius[newind]
-            newgasind = where(gasradius lt maxrad,ngas)
-            newdarkind = where(darkradius lt maxrad,ndark)
-            newstarind = where(starradius lt maxrad,nstar)
+            if ngas ne 0 then begin
+		gind = where(gasradius lt maxrad,ngas)
+		if ngas ne 0 then gas = gas[gind]
+	    endif
+            if ndark ne 0 then begin
+		dind = where(darkradius lt maxrad,ndark)
+		if ndark ne 0 then dark = dark[dind]
+	    endif
+            if nstar ne 0 then begin
+		sind = where(starradius lt maxrad,nstar)
+		if nstar ne 0 then star = star[sind]
+	    endif
             if ngas ne 0 AND nstar ne 0 AND ndark ne 0 then begin
-                gas = gas[newgasind]
-                dark = dark[newdarkind]
-                star = star[newstarind]
                 x = [gas.x,dark.x,star.x]
                 y = [gas.y,dark.y,star.y]
                 z = [gas.z,dark.z,star.z]
             endif
             ; if center has no gas particles
             if ngas eq 0 AND nstar ne 0 AND ndark ne 0 then begin
-                dark = dark[newdarkind]
-                star = star[newstarind]
                 x = [dark.x,star.x]
                 y = [dark.y,star.y]
                 z = [dark.z,star.z]
             endif
             ; if center has no star particles
             if nstar eq 0 AND ngas ne 0 AND ndark ne 0 then begin
-                gas = gas[newgasind]
-                dark = dark[newdarkind]
                 x = [gas.x,dark.x]
                 y = [gas.y,dark.y]
                 z = [gas.z,dark.z]
             endif
             ; if center has no dark particles
             if nstar ne 0 AND ngas ne 0 AND ndark eq 0 then begin
-                gas = gas[newgasind]
-                star = star[newstarind]
                 x = [gas.x,star.x]
                 y = [gas.y,star.y]
                 z = [gas.z,star.z]
             endif
             ; if center has only dark particles
             if nstar eq 0 AND ngas eq 0 then begin
-                dark = dark[newdarkind]
                 x = dark.x
                 y = dark.y
                 z = dark.z           
             endif
             ; if center has only star particles
             if ngas eq 0 AND ndark eq 0 then begin
-                star = star[newstarind]
                 x = star.x
                 y = star.y
                 z = star.z      
             endif
             ; if center has only gas particles
             if nstar eq 0 AND ndark eq 0 then begin
-                gas = gas[newgasind]
                 x = gas.x
                 y = gas.y
                 z = gas.z      
